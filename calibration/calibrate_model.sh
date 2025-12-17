@@ -65,6 +65,8 @@ create_quant_config() {
         fi
     elif [[ $model_name_lower =~ ^deepseek ]]; then
         tmp_config="{\"mode\": \"QUANTIZE\",\"observer\": \"maxabs\",\"scale_method\": \"maxabs_hw\", \"scale_format\": \"scalar\", \"allowlist\": {\"types\": [],\"names\": []},\"blocklist\": {\"types\": [],\"names\": [\"lm_head\", \"mlp\\\.gate\\\b\"]},\"dump_stats_path\": \"$1/$2/$3/inc_output\"}"
+    elif [[ $model_name_lower =~ ^glm-4.5-air-fp8 ]]; then
+        tmp_config="{\"mode\": \"QUANTIZE\", \"observer\": \"maxabs\", \"scale_method\": \"maxabs_hw\", \"allowlist\": {\"types\": [], \"names\": []}, \"blocklist\": {\"types\": [\"VLLMKVCache\", \"Matmul\", \"Softmax\"], \"names\": [\"lm_head\"]}, \"dump_stats_path\": \"$1/$2/$3/inc_output\"}"
     else
         tmp_config="{\"mode\": \"QUANTIZE\",\"observer\": \"maxabs\",\"scale_method\": \"maxabs_hw\",\"allowlist\": {\"types\": [],\"names\": []},\"blocklist\": {\"types\": [],\"names\": []},\"dump_stats_path\": \"$1/$2/$3/inc_output\"}"
     fi
@@ -208,6 +210,11 @@ if  [[ "$model_name_lower" == *"deepseek"* ]]; then
     EXTRA_FLAGS_STEP_3+="--deepseek "
     EXTRA_ENVS_STEP_4="VLLM_HPU_FORCE_CHANNEL_FP8=0"
     EXTRA_FLAGS_STEP_4+="--block-quant --expert-parallel "
+fi
+
+if  [[ "$model_name_lower" == *"glm-4.5-air-fp8"* ]]; then
+    EXTRA_FLAGS_STEP_2+="--expert-parallel "
+    EXTRA_FLAGS_STEP_4+="--expert-parallel "
 fi
 
 # Skip step 1 if the DATASET_PATH_OR_NAME is a .pkl file
